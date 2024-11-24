@@ -1,0 +1,55 @@
+#include <iostream>
+#include <opencv2/opencv.hpp>
+
+using namespace cv;
+using namespace std;
+
+int main()
+{
+    VideoCapture cap("C:/Users/赵天祥/source/repos/opencv/video.mp4");
+    if (!cap.isOpened())
+    {
+        cerr << "Error opening video file" << endl;
+        return -1;
+    }
+
+    while (true)
+    {
+        Mat frame;
+        bool ret = cap.read(frame);
+        if (!ret) break;
+
+        Mat hsv;
+        cvtColor(frame, hsv, COLOR_BGR2HSV);
+
+        Scalar lower_blue(90, 100, 100);
+        Scalar upper_blue(120, 140, 140);
+
+        Mat mask;
+        inRange(hsv, lower_blue, upper_blue, mask);
+
+        vector<vector<Point>> contours;
+        findContours(mask, contours, RETR_TREE, CHAIN_APPROX_SIMPLE);
+
+        for (size_t i = 0; i < contours.size(); i++)
+        {
+            Point2f center;
+            float radius;
+            minEnclosingCircle(contours[i], center, radius);
+            if (radius > 0)
+            {
+                circle(frame, center, radius, Scalar(0, 255, 0), 2);
+            }
+        }
+
+        imshow("Video with Blue Circles", frame);
+
+        char c = (char)waitKey(1);
+        if (c == 'q') break;
+    }
+    cap.release();
+    destroyAllWindows();
+
+    return 0;
+}
+
